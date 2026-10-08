@@ -1,6 +1,4 @@
-# PALO ALTO NETWORKS LAB 2026
-
-### Security Policy, Inter-Zone & NAT — Kiểm soát Traffic từ TRUST đến UNTRUST
+# Security Policy, Inter-Zone & NAT — Kiểm soát Traffic từ TRUST đến UNTRUST
 
 > **Mục tiêu:** Xây dựng và kiểm chứng chính sách bảo mật giữa các zone **TRUST – DMZ – UNTRUST**, xác định rule được match, cơ chế NAT và sự thay đổi địa chỉ IP trong từng session.
 
@@ -218,5 +216,3 @@ Các câu hỏi cần trả lời khi traffic thất bại:
 **Kết luận:** Một kết nối thành công không tự động chứng minh policy và NAT được cấu hình đúng. Cần đối chiếu rule, session, bản dịch địa chỉ và log ở cả firewall lẫn server để xác định chính xác nguyên nhân.
 
 ---
-
-*Palo Alto Networks Lab 2026 — Security Policy · Inter-Zone · SNAT · DNAT · Troubleshooting*

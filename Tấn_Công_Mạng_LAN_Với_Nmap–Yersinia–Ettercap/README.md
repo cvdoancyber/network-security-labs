@@ -1,4 +1,4 @@
-# LAB THỰC HÀNH: TẤN CÔNG MẠNG LAN VỚI NMAP – YERSINIA – ETTERCAP
+# TẤN CÔNG MẠNG LAN VỚI NMAP – YERSINIA – ETTERCAP
 
 > **Mục tiêu:** Tìm hiểu các kỹ thuật trinh sát và tấn công mạng LAN trong môi trường lab được cấp phép; từ đó đánh giá rủi ro và triển khai các biện pháp phòng thủ theo nguyên tắc **Defense in Depth**.
 
@@ -17,7 +17,6 @@ Các thiết bị trong mô hình gồm:
 | **Kali Linux** | Máy kiểm thử bảo mật | `172.16.1.3/24` |
 | **Windows** | Máy trạm mục tiêu | Nhận IP qua DHCP |
 
-> **Lưu ý:** Sơ đồ sử dụng mạng `172.16.1.0/24`. Chỉ thực hiện kiểm thử trên các thiết bị và hệ thống thuộc phạm vi lab được cho phép.
 
 ## 2. Giai đoạn 1 – Trinh sát mạng với Nmap
 
