@@ -1,70 +1,172 @@
-# LAB THỰC HÀNH: Tấn Công Mạng LAN Với Nmap – Yersinia – Ettercap
+# LAB THỰC HÀNH: TẤN CÔNG MẠNG LAN VỚI NMAP – YERSINIA – ETTERCAP
 
-Một trong những cách hiệu quả nhất để hiểu về bảo mật mạng là... thử tấn công nó (trong môi trường lab an toàn) trước khi học cách phòng thủ. Bài lab hôm nay của trung tâm sẽ đưa các bạn đi qua 3 công cụ kinh điển trong giới Pentest & Network Security.
+> **Mục tiêu:** Tìm hiểu các kỹ thuật trinh sát và tấn công mạng LAN trong môi trường lab được cấp phép; từ đó đánh giá rủi ro và triển khai các biện pháp phòng thủ theo nguyên tắc **Defense in Depth**.
 
-![](./sodo.jpg)
+Một trong những cách hiệu quả nhất để hiểu về bảo mật mạng là thực hành các kỹ thuật tấn công trong **môi trường lab an toàn** trước khi học cách phát hiện và phòng thủ. Bài lab sử dụng ba công cụ quen thuộc trong lĩnh vực **Pentest & Network Security**: **Nmap**, **Yersinia** và **Ettercap**.
 
-# GIAI ĐOẠN 1 – TRINH SÁT VỚI NMAP
+## 1. Sơ đồ và mô hình mạng
 
-Trước khi tấn công, kẻ xấu luôn cần bản đồ mạng. Trong lab, sau khi dựng hạ tầng cơ bản (switch/router có NAT + DHCP pool), Nmap được dùng theo nhiều kỹ thuật khác nhau:
+![Sơ đồ mạng LAN](./sodo.jpg)
 
-`nmap -sT – TCP Connect Scan`: quét toàn bộ dải IP để xem port nào mở. Điểm thú vị là bài lab cho thấy rõ trước và sau khi bật SSH/Telnet, kết quả scan thay đổi ra sao – một bài học trực quan về việc mỗi dịch vụ bật thêm đồng nghĩa với một bề mặt tấn công (attack surface) mới.
+Các thiết bị trong mô hình gồm:
 
-`nmap -O – OS Fingerprinting`: đoán hệ điều hành của router/switch dựa trên đặc điểm TCP/IP stack.
+| Thiết bị | Vai trò | Địa chỉ IP / Cấu hình |
+|---|---|---|
+| **Router** | Gateway, kết nối Internet | LAN: `172.16.1.1/24`; WAN: DHCP |
+| **Switch** | Kết nối các thiết bị LAN | VLAN 1: `172.16.1.2/24` |
+| **Kali Linux** | Máy kiểm thử bảo mật | `172.16.1.3/24` |
+| **Windows** | Máy trạm mục tiêu | Nhận IP qua DHCP |
 
-`nmap -p- <IP>` : quét toàn bộ 65535 port, hữu ích khi kiểm tra máy Windows có dịch vụ ẩn nào đang chạy.
+> **Lưu ý:** Sơ đồ sử dụng mạng `172.16.1.0/24`. Chỉ thực hiện kiểm thử trên các thiết bị và hệ thống thuộc phạm vi lab được cho phép.
 
-`nmap -sn – Ping sweep`, chỉ xác định host còn sống, không quét port.
+## 2. Giai đoạn 1 – Trinh sát mạng với Nmap
 
->Insight: Đây chính là bước mà mọi pentest thực tế đều bắt đầu. Việc phòng thủ ở giai đoạn này chủ yếu là giảm thiểu dịch vụ không cần thiết và dùng firewall/IDS để phát hiện các pattern quét bất thường.
+Trước khi phân tích các nguy cơ bảo mật, cần xác định những host đang hoạt động, các cổng mở và dịch vụ được cung cấp trên mạng. Sau khi dựng hạ tầng cơ bản (router/switch, NAT và DHCP), có thể dùng **Nmap** để khảo sát.
 
-# GIAI ĐOẠN 2 – KHAI THÁC GIAO THỨC LỚP 2 VỚI YERSINIA
+### 2.1. TCP Connect Scan
 
-Đây là phần đáng chú ý nhất vì tấn công lớp 2 thường bị xem nhẹ so với lớp 3 trở lên, trong khi hậu quả lại rất nghiêm trọng do các giao thức này vốn được thiết kế không có cơ chế xác thực.
+```bash
+nmap -sT <IP>
+```
 
-a) DHCP Starvation Attack
-Yersinia gửi hàng loạt gói DHCP DISCOVER giả với MAC nguồn ngẫu nhiên, khiến DHCP server cấp phát cạn kiệt toàn bộ dải IP hợp lệ chỉ trong vài giây. Hậu quả: client thật không xin được IP → mất kết nối mạng (DoS). Lab minh chứng bằng lệnh show ip dhcp binding cho thấy hàng loạt địa chỉ "ma" xuất hiện.
+- Sử dụng cơ chế bắt tay TCP để kiểm tra trạng thái các cổng.
+- So sánh kết quả **trước và sau khi bật SSH/Telnet** trên thiết bị để quan sát sự thay đổi của bề mặt tấn công (*attack surface*).
 
--> Phòng chống: DHCP Snooping (giới hạn rate + chỉ tin cậy port hướng lên uplink) kết hợp Port Security để giới hạn số MAC học được trên mỗi port truy cập.
+### 2.2. OS Fingerprinting
 
-b) Root Bridge Attack (STP Manipulation)
+```bash
+sudo nmap -O <IP>
+```
 
-Bằng cách gửi BPDU với Bridge ID thấp hơn Root Bridge hiện tại, kẻ tấn công có thể "cướp" vai trò Root Bridge trong cây Spanning Tree. Khi máy tấn công (thường có băng thông/tài nguyên yếu hơn switch thật) trở thành Root, toàn bộ traffic buộc phải đi qua nó -> vừa là điểm nghẽn, vừa là vị trí lý tưởng để sniffing.
+- Ước đoán hệ điều hành dựa trên đặc điểm phản hồi của TCP/IP stack.
+- Kết quả chỉ mang tính suy đoán và phụ thuộc vào môi trường mạng.
 
-Phòng chống: Root Guard (chặn port không cho trở thành Root Port) kết hợp BPDU Guard (tự động shutdown port truy cập nếu nhận BPDU – vì thiết bị đầu cuối không bao giờ nên gửi BPDU).
+### 2.3. Quét toàn bộ cổng TCP
 
-c) CDP Flooding Attack
-CDP là giao thức Cisco dùng để trao đổi thông tin thiết bị lân cận, nhưng hoàn toàn không mã hóa và không xác thực. Yersinia lợi dụng điều này để gửi ồ ạt gói CDP giả, làm bảng neighbor table phình to bất thường, tiêu tốn CPU/RAM của switch/router đến mức có thể treo thiết bị – một dạng tấn công DoS ở Layer 2.
+```bash
+nmap -p- <IP>
+```
 
--> Phòng chống: Tắt CDP (no cdp enable) trên toàn bộ port hướng về endpoint, chỉ giữ lại giữa các thiết bị hạ tầng cần quản lý lẫn nhau.
+- Quét các cổng TCP từ `1` đến `65535`.
+- Hữu ích khi rà soát các dịch vụ đang lắng nghe trên máy Windows hoặc thiết bị mạng.
 
->Insight chung của phần Yersinia: Cả ba kiểu tấn công đều khai thác cùng một điểm yếu triết học: các giao thức Layer 2 (DHCP, STP, CDP) được thiết kế cho một mạng "đáng tin cậy", không có khái niệm xác thực nguồn gửi. Đây là lý do vì sao các tính năng "Guard" (Root Guard, BPDU Guard, DHCP Snooping) đều xoay quanh nguyên tắc: không tin bất kỳ thứ gì đến từ port truy cập (access port).
-# GIAI ĐOẠN 3 – MAN-IN-THE-MIDDLE VỚI ETTERCAP
-Đây là phần thể hiện rõ nhất hậu quả thực tế của một cuộc tấn công thành công.
-Cơ chế ARP Poisoning:
+### 2.4. Ping Sweep – Phát hiện host
 
-Kali chuyển card mạng sang chế độ promiscuous, gửi ARP Request để dò toàn bộ host trong subnet.
+```bash
+nmap -sn 172.16.1.0/24
+```
 
-Chọn 2 mục tiêu: nạn nhân (Windows 7) và default gateway.
+- Phát hiện host đang hoạt động trong subnet.
+- Không thực hiện quét cổng.
 
-Ettercap liên tục gửi gói ARP Reply giả, khiến:
+> **Bài học phòng thủ:** Giảm thiểu dịch vụ không cần thiết, giới hạn truy cập bằng firewall/ACL và sử dụng IDS/IPS hoặc hệ thống giám sát để phát hiện hành vi quét bất thường.
 
-Nạn nhân tin rằng IP gateway ứng với MAC của Kali.
+## 3. Giai đoạn 2 – Khai thác giao thức Layer 2 với Yersinia
 
-Gateway tin rằng IP nạn nhân cũng ứng với MAC của Kali.
+Các giao thức Layer 2 đóng vai trò quan trọng trong mạng LAN nhưng nhiều giao thức không có cơ chế xác thực nguồn gửi đủ mạnh. **Yersinia** được sử dụng trong lab để tìm hiểu ba nhóm rủi ro tiêu biểu.
 
-Kết quả: mọi traffic giữa hai bên đều phải "ghé qua" Kali trước – xác minh được ngay trên bảng ARP của router khi thấy 2 IP khác nhau trỏ về cùng 1 MAC.
-Sniffing & khai thác:
+### 3.1. DHCP Starvation Attack
 
-Khi nạn nhân đăng nhập vào một trang web dùng HTTP (không mã hóa) như altoromutual.com, Wireshark trên máy Kali bắt trọn gói tin HTTP POST, và trong phần HTML Form URL Encoded – username/password hiện nguyên dạng plaintext. Ettercap thậm chí còn có sẵn cơ chế tự động bóc tách credential cho hàng loạt giao thức cũ như FTP, Telnet, POP, IMAP, SNMP...
+**Cơ chế:**
 
->Insight: Đây là minh chứng rõ ràng nhất cho việc vì sao HTTPS/TLS không phải là tùy chọn mà là bắt buộc. ARP Poisoning về bản chất không thể ngăn hoàn toàn ở lớp 2 (trừ khi dùng Dynamic ARP Inspection kết hợp DHCP Snooping), nhưng nếu dữ liệu đã được mã hóa end-to-end thì dù kẻ tấn công có đứng giữa cũng không đọc được nội dung.
+Yersinia có thể tạo số lượng lớn bản tin **DHCP DISCOVER** với các địa chỉ MAC giả. Khi DHCP server cấp phát nhiều lease cho các yêu cầu này, pool địa chỉ có nguy cơ cạn kiệt, khiến máy trạm hợp lệ không nhận được IP — một dạng **Denial of Service (DoS)**.
 
-# KẾT LUẬN
-Bài lab này là một case study rất đầy đủ để hiểu vì sao bảo mật mạng LAN cần tiếp cận theo nhiều lớp (defense-in-depth):
+**Quan sát trong lab:**
 
-Lớp 2: Port Security, DHCP Snooping, Dynamic ARP Inspection, Root Guard, BPDU Guard
+```text
+show ip dhcp binding
+```
 
-Lớp ứng dụng: bắt buộc mã hóa (HTTPS/TLS) thay vì các giao thức plaintext cũ
+Kiểm tra danh sách các DHCP lease để phát hiện số lượng địa chỉ được cấp phát bất thường.
 
-Giám sát: theo dõi log/CDP table/ARP table bất thường để phát hiện sớm
+**Biện pháp phòng thủ:**
+
+- **DHCP Snooping:** Phân loại cổng trusted/untrusted và giới hạn tốc độ gói DHCP trên các cổng truy cập.
+- **Port Security:** Giới hạn số lượng địa chỉ MAC được học trên một cổng (tùy điều kiện triển khai).
+- Theo dõi DHCP pool và nhật ký cấp phát địa chỉ.
+
+### 3.2. Root Bridge Attack (STP Manipulation)
+
+**Cơ chế:**
+
+Kẻ tấn công có thể gửi các bản tin **BPDU** giả với **Bridge ID** có mức ưu tiên cao hơn (giá trị thấp hơn) Root Bridge hiện tại, nhằm ảnh hưởng đến quá trình bầu chọn Root Bridge của **Spanning Tree Protocol (STP)**.
+
+Nếu việc thao túng thành công, topology STP có thể thay đổi, gây ra đường truyền không tối ưu, gián đoạn kết nối hoặc tạo điều kiện để traffic đi qua thiết bị do kẻ tấn công kiểm soát trong một số cấu hình.
+
+**Biện pháp phòng thủ:**
+
+- **Root Guard:** Ngăn các cổng không mong muốn trở thành đường đi hướng về Root Bridge mới.
+- **BPDU Guard:** Vô hiệu hóa cổng access/PortFast nếu nhận BPDU trái với thiết kế.
+- Quy hoạch vị trí Root Bridge và cấu hình ưu tiên STP phù hợp.
+
+### 3.3. CDP Flooding Attack
+
+**Cơ chế:**
+
+**Cisco Discovery Protocol (CDP)** được sử dụng để trao đổi thông tin giữa các thiết bị Cisco lân cận. Vì CDP không cung cấp cơ chế xác thực và mã hóa như một giao thức bảo mật, các bản tin CDP giả mạo hoặc được gửi với lưu lượng lớn có thể gây tiêu tốn tài nguyên, tùy thiết bị và phiên bản phần mềm.
+
+**Biện pháp phòng thủ:**
+
+- Tắt CDP trên các cổng kết nối tới endpoint khi không cần thiết:
+
+  ```text
+  no cdp enable
+  ```
+
+- Chỉ bật CDP ở những cổng hạ tầng thực sự cần trao đổi thông tin lân cận.
+- Giám sát tài nguyên thiết bị và các biến động bất thường trong bảng CDP neighbor.
+
+> **Bài học phòng thủ Layer 2:** Không mặc định tin cậy các bản tin đến từ **access port**. Áp dụng phối hợp **DHCP Snooping, Port Security, Root Guard, BPDU Guard** và các tính năng bảo vệ phù hợp với từng giao thức.
+
+## 4. Giai đoạn 3 – Man-in-the-Middle với Ettercap
+
+Giai đoạn này minh họa nguy cơ khi một máy trong cùng mạng LAN có thể can thiệp quá trình phân giải địa chỉ IP–MAC bằng kỹ thuật **ARP Poisoning**.
+
+### 4.1. Cơ chế ARP Poisoning
+
+Trong mô hình lab, hai bên liên quan là:
+
+1. **Windows:** Máy trạm nạn nhân.
+2. **Default Gateway:** Router mà Windows sử dụng để truy cập mạng ngoài.
+
+**Ettercap** có thể phát đi các bản tin **ARP Reply giả**, nhằm làm cho:
+
+- Windows tin rằng **IP của gateway** tương ứng với **MAC của Kali**.
+- Gateway tin rằng **IP của Windows** tương ứng với **MAC của Kali**.
+
+Khi cả hai phía bị ảnh hưởng và Kali chuyển tiếp gói tin phù hợp, traffic giữa nạn nhân và gateway có thể đi qua Kali, tạo điều kiện cho một tình huống **Man-in-the-Middle (MITM)**.
+
+**Dấu hiệu kiểm chứng:** Đối chiếu bảng ARP của các thiết bị; các ánh xạ IP–MAC bất thường có thể là dấu hiệu bị đầu độc ARP.
+
+### 4.2. Sniffing và nguy cơ lộ thông tin xác thực
+
+Nếu nạn nhân đăng nhập vào một trang web qua **HTTP không mã hóa**, các trường dữ liệu gửi bằng HTTP POST có thể bị quan sát dưới dạng **plaintext** trong Wireshark, chẳng hạn ở phần **HTML Form URL Encoded**.
+
+Một số giao thức cũ hoặc cấu hình truyền thông không mã hóa như **FTP** và **Telnet** cũng có nguy cơ làm lộ thông tin xác thực khi bị nghe lén. Mức độ quan sát được phụ thuộc vào giao thức và cách hệ thống triển khai.
+
+### 4.3. Biện pháp phòng thủ
+
+- **Dynamic ARP Inspection (DAI):** Kiểm tra tính hợp lệ của bản tin ARP; thường kết hợp dữ liệu binding từ DHCP Snooping.
+- **DHCP Snooping:** Hỗ trợ xây dựng cơ sở kiểm tra địa chỉ IP–MAC tại switch.
+- **HTTPS/TLS:** Mã hóa dữ liệu truyền trên mạng, giúp bảo vệ nội dung ngay cả khi đường truyền bị quan sát.
+- **Giám sát ARP:** Phát hiện sự thay đổi địa chỉ MAC bất thường của gateway hoặc host quan trọng.
+
+> **Bài học phòng thủ:** Mã hóa bằng **HTTPS/TLS** giúp bảo vệ tính bí mật của nội dung truyền tải. Ở Layer 2, **DAI kết hợp DHCP Snooping** có thể ngăn chặn nhiều tình huống ARP Spoofing nếu được cấu hình đúng.
+
+## 5. Kết luận
+
+Bài lab cho thấy việc bảo vệ mạng LAN đòi hỏi cách tiếp cận **Defense in Depth** thay vì chỉ dựa vào một công cụ hay một lớp bảo mật.
+
+| Lớp bảo vệ | Biện pháp tiêu biểu | Mục tiêu |
+|---|---|---|
+| **Layer 2** | Port Security, DHCP Snooping, DAI, Root Guard, BPDU Guard | Hạn chế giả mạo và thao túng giao thức trong LAN |
+| **Mạng và dịch vụ** | ACL, Firewall, tắt dịch vụ không cần thiết | Giảm bề mặt tấn công |
+| **Ứng dụng** | HTTPS/TLS, hạn chế giao thức plaintext | Bảo vệ dữ liệu và thông tin đăng nhập |
+| **Giám sát** | Traffic log, ARP table, CDP neighbor, DHCP binding, IDS/IPS | Phát hiện sớm hành vi bất thường |
+
+**Thông điệp chính:** Hiểu cách các cuộc tấn công xảy ra giúp triển khai cơ chế phòng thủ phù hợp hơn, từ việc bảo vệ cổng switch, kiểm soát giao thức Layer 2 đến mã hóa lưu lượng ứng dụng.
+
+---
+
+**Công cụ sử dụng:** `Nmap` · `Yersinia` · `Ettercap` · `Wireshark`  
+**Phạm vi thực hành:** Môi trường mạng LAN giả lập/ảo hóa được phép kiểm thử.
