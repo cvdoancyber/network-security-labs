@@ -10,7 +10,7 @@ Firewall không chỉ đơn giản là **Allow** hoặc **Deny** traffic. Lab n�
 
 ## 2. Network Topology
 
-![Palo Alto Lab Topology](images/topology.png)
+![Palo Alto Lab Topology](./sodo.jpg)
 
 | Thiết bị | Zone | Địa chỉ IP | Vai trò |
 |---|---|---|---|
