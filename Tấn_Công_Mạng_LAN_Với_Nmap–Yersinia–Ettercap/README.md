@@ -2,13 +2,19 @@
 
 Một trong những cách hiệu quả nhất để hiểu về bảo mật mạng là... thử tấn công nó (trong môi trường lab an toàn) trước khi học cách phòng thủ. Bài lab hôm nay của trung tâm sẽ đưa các bạn đi qua 3 công cụ kinh điển trong giới Pentest & Network Security.
 
+![](./sodo.jpg)
+
 # GIAI ĐOẠN 1 – TRINH SÁT VỚI NMAP
 
 Trước khi tấn công, kẻ xấu luôn cần bản đồ mạng. Trong lab, sau khi dựng hạ tầng cơ bản (switch/router có NAT + DHCP pool), Nmap được dùng theo nhiều kỹ thuật khác nhau:
-nmap -sT – TCP Connect Scan: quét toàn bộ dải IP để xem port nào mở. Điểm thú vị là bài lab cho thấy rõ trước và sau khi bật SSH/Telnet, kết quả scan thay đổi ra sao – một bài học trực quan về việc mỗi dịch vụ bật thêm đồng nghĩa với một bề mặt tấn công (attack surface) mới.
-nmap -O – OS Fingerprinting: đoán hệ điều hành của router/switch dựa trên đặc điểm TCP/IP stack.
-nmap -p- – quét toàn bộ 65535 port, hữu ích khi kiểm tra máy Windows có dịch vụ ẩn nào đang chạy.
-nmap -sn – Ping sweep, chỉ xác định host còn sống, không quét port.
+
+`nmap -sT – TCP Connect Scan`: quét toàn bộ dải IP để xem port nào mở. Điểm thú vị là bài lab cho thấy rõ trước và sau khi bật SSH/Telnet, kết quả scan thay đổi ra sao – một bài học trực quan về việc mỗi dịch vụ bật thêm đồng nghĩa với một bề mặt tấn công (attack surface) mới.
+
+`nmap -O – OS Fingerprinting`: đoán hệ điều hành của router/switch dựa trên đặc điểm TCP/IP stack.
+
+`nmap -p- <IP>` : quét toàn bộ 65535 port, hữu ích khi kiểm tra máy Windows có dịch vụ ẩn nào đang chạy.
+
+`nmap -sn – Ping sweep`, chỉ xác định host còn sống, không quét port.
 
 >Insight: Đây chính là bước mà mọi pentest thực tế đều bắt đầu. Việc phòng thủ ở giai đoạn này chủ yếu là giảm thiểu dịch vụ không cần thiết và dùng firewall/IDS để phát hiện các pattern quét bất thường.
 
