@@ -28,6 +28,12 @@ Các thành phần trong hệ thống:
 | PC-1 | Client trong mạng LAN |
 | Cloud | Mô phỏng mạng Outside/Internet |
 
+Tải GNS3 [tại đây](https://www.gns3.com/software/download)
+
+Tải Cisco ASA [tại đây](https://gns3.com/marketplace/appliances/cisco-asa)
+
+Tải asav9-12-4-18.qcow2 [tại đây](https://upw.io/4wb/asav9-12-4-18.qcow2)
+
 ### 1.2. Thông số cấu hình
 
 | Interface | Nameif | Security Level | IP Address |
