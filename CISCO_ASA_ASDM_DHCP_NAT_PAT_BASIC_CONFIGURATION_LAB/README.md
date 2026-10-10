@@ -21,10 +21,6 @@ Thông qua bài Lab, chúng ta sẽ làm quen với cả **CLI và ASDM**, đồ
 
 ![Cisco ASA ASDM Lab Topology](./topology.jpg)
 
-Mô hình triển khai:
-
-**PC → Cisco ASA → Internet**
-
 Các thành phần trong hệ thống:
 
 | Thiết bị | Vai trò |
