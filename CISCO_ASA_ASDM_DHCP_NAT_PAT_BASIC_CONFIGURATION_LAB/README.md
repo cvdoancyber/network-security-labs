@@ -11,8 +11,6 @@ Chúng ta sẽ cấu hình Cisco ASA để máy tính trong mạng LAN có thể
 - Truy cập mạng bên ngoài thông qua NAT/PAT.
 - Kiểm tra kết nối và các chính sách bảo mật cơ bản.
 
-Thông qua bài Lab, chúng ta sẽ làm quen với cả **CLI và ASDM**, đồng thời hiểu cách Firewall xử lý lưu lượng giữa mạng Inside và Outside.
-
 ---
 
 ## 1. MÔ HÌNH LAB
