@@ -2,9 +2,9 @@
 
 ## Giới thiệu
 
-Nếu bạn đang học **Network Security** hoặc muốn làm quen với thiết bị Firewall Cisco ASA, một trong những bài Lab cơ bản nên thực hành là cấu hình ASA thông qua **ASDM (Adaptive Security Device Manager)**.
+Bài lab làm quen với thiết bị Firewall Cisco ASA **(Adaptive Security Appliance)**, cấu hình ASA thông qua **ASDM (Adaptive Security Device Manager)**.
 
-Trong bài Lab này, chúng ta sẽ từng bước cấu hình Cisco ASA để máy tính trong mạng LAN có thể:
+Chúng ta sẽ cấu hình Cisco ASA để máy tính trong mạng LAN có thể:
 
 - Nhận địa chỉ IP tự động từ DHCP Server.
 - Kết nối đến Firewall Cisco ASA.
@@ -29,9 +29,10 @@ Các thành phần trong hệ thống:
 
 | Thiết bị | Vai trò |
 |---|---|
+|Môi trường|GNS3|
 | Cisco ASA | Firewall, DHCP Server, NAT/PAT |
 | PC-1 | Client trong mạng LAN |
-| VNPRO Cloud | Mô phỏng mạng Outside/Internet |
+| Cloud | Mô phỏng mạng Outside/Internet |
 
 ### 1.2. Thông số cấu hình
 
