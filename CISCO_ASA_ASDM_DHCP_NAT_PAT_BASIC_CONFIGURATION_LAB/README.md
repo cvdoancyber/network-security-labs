@@ -17,7 +17,7 @@ Chúng ta sẽ cấu hình Cisco ASA để máy tính trong mạng LAN có thể
 
 ### 1.1. Network Topology
 
-![Cisco ASA ASDM Lab Topology](./topology.jpg)
+![Cisco ASA ASDM Lab Topology](./images/topology.png)
 
 Các thành phần trong hệ thống:
 
@@ -116,7 +116,7 @@ exit
 ### 3.2. Tạo tài khoản quản trị
 
 ```cisco
-username admin password vnpro privilege 15
+username admin password LabAdmin2026! privilege 15
 aaa authentication http console LOCAL
 ```
 
@@ -125,10 +125,8 @@ Tài khoản sử dụng trong môi trường Lab:
 | Thông số | Giá trị |
 |---|---|
 | Username | admin |
-| Password | vnpro |
+| Password | LabAdmin2026! |
 | Privilege | 15 |
-
-> ⚠️ **Lưu ý:** Đây chỉ là tài khoản mẫu dành cho môi trường Lab. Trong môi trường Production, cần sử dụng mật khẩu mạnh và quản lý tài khoản theo nguyên tắc Least Privilege.
 
 ### 3.3. Kích hoạt HTTP Server
 
